@@ -1,0 +1,32 @@
+# Local environment variables and credentials
+/.env*
+/config/master.key
+/config/credentials/*.key
+
+# Local Ruby and editor state
+/.bundle
+/.ruby-lsp/
+/.rubymate/
+.DS_Store
+
+# Generated Rails runtime files
+/log/*
+!/log/.keep
+/tmp/*
+!/tmp/.keep
+!/tmp/pids/
+!/tmp/storage/
+/tmp/pids/*
+!/tmp/pids/.keep
+/tmp/storage/*
+!/tmp/storage/.keep
+/storage/*
+!/storage/.keep
+/coverage/
+
+# Locally installed or cached gems
+/vendor/bundle/
+/vendor/cache/
+/log/*
+!/log/.keep
+/tmp/cache/bootsnap/*

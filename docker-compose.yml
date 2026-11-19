@@ -1,0 +1,75 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["./bin/rails", "server", "-b", "0.0.0.0", "-p", "3002"]
+    environment:
+      RAILS_ENV: development
+      DB_HOST: db
+      POSTGRES_USER: ${POSTGRES_USER:-project_api}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-project_api}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/project_api_development
+      REDIS_URL: redis://redis:6381/0
+    ports:
+      - "127.0.0.1:3002:3002"
+    volumes:
+      - .:/rails
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  db:
+    image: postgres:17-alpine
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+    environment:
+      POSTGRES_DB: project_api_development
+      POSTGRES_USER: ${POSTGRES_USER:-project_api}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--port", "6381", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6381", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  sidekiq:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["bundle", "exec", "sidekiq"]
+    environment:
+      RAILS_ENV: development
+      DB_HOST: db
+      POSTGRES_USER: ${POSTGRES_USER:-project_api}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-project_api}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/project_api_development
+      REDIS_URL: redis://redis:6381/0
+      SIDEKIQ_CONCURRENCY: ${SIDEKIQ_CONCURRENCY:-5}
+    volumes:
+      - .:/rails
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:

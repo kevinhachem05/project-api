@@ -1,24 +1,26 @@
-# README
+# Project API
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+Ruby on Rails API using Ruby 3.4.9, PostgreSQL, and Sidekiq for local background jobs.
 
-Things you may want to cover:
+## Local development with Docker Compose
 
-* Ruby version
+Requirements: Docker Engine or Docker Desktop with the Compose plugin.
 
-* System dependencies
+```sh
+docker compose up --build
+```
 
-* Configuration
+The Rails API is available at `http://localhost:3002`; PostgreSQL and Redis are reachable to other containers as `db:5432` and `redis:6381`. PostgreSQL is also published to the host on `127.0.0.1:5433` by default (change `POSTGRES_PORT` in `.env` if needed). Compose stores database and Redis data in named volumes.
 
-* Database creation
+To stop the services, run `docker compose down`. This keeps the named data volumes. Do not use `docker compose down -v` unless you intend to permanently delete local database and Redis data.
 
-* Database initialization
+Set `SIDEKIQ_CONCURRENCY` in your local `.env` to tune worker concurrency. Keep `.env` local and never commit its credentials or use them in production.
 
-* How to run the test suite
+## Tests and lint
 
-* Services (job queues, cache servers, search engines, etc.)
+```sh
+bin/rails test
+bin/rubocop
+```
 
-* Deployment instructions
-
-* ...
+Production queue and cache settings remain in the Rails production configuration and should be supplied with production-specific environment values.
