@@ -1,17 +1,15 @@
 Rails.application.routes.draw do
-  devise_for :admin_users,
+  devise_for :users,
              skip: %i[registrations passwords],
              controllers: { sessions: "admin/sessions" }
 
-  authenticate :admin_user do
+  authenticate :user, ->(user) { user.platform_admin? && user.active? } do
     mount Motor::Admin => "/admin"
   end
+
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check
-
-  # Defines the root path route ("/")
-  root to: redirect("/admin")
 end

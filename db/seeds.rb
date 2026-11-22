@@ -8,25 +8,26 @@
 #     MovieGenre.find_or_create_by!(name: genre_name)
 #   end
 
-# Persist Motor's resource schema so the AdminUser list and record detail views
-# use the same fields and access rules as the Rails model.
-admin_user_schema = Motor::BuildSchema::LoadFromRails.call.find do |schema|
-  schema[:name] == "admin_user"
+user_schema = Motor::BuildSchema::LoadFromRails.call.find do |schema|
+  schema[:name] == "user"
 end
 
-if admin_user_schema && !Motor::Resource.exists?(name: admin_user_schema[:name])
+Motor::Resource.where(name: "admin_user").delete_all
+
+if user_schema && !Motor::Resource.exists?(name: user_schema[:name])
   Motor::Resources::PersistConfigs.call(
-    Motor::Resource.new(name: admin_user_schema[:name], preferences: admin_user_schema)
+    Motor::Resource.new(name: user_schema[:name], preferences: user_schema)
   )
 end
 
-admin_user = AdminUser.find_or_initialize_by(email: "admin@example.com")
+admin_email = ENV.fetch("ADMIN_USER_EMAIL", "admin@example.com").strip.downcase
+admin = User.where("LOWER(email) = ?", admin_email).first || User.new(email: admin_email)
 admin_password = ENV["ADMIN_USER_PASSWORD"].presence
 
-if admin_user.new_record? && admin_password.blank?
-  raise "Set ADMIN_USER_PASSWORD before creating the seeded administrator."
+if admin_password.blank? && (admin.new_record? || admin.encrypted_password.blank?)
+  raise "Set ADMIN_USER_PASSWORD before creating or repairing the seeded platform administrator."
 end
 
-admin_user.assign_attributes(first_name: "Kevin", last_name: "Hachem")
-admin_user.password = admin_password if admin_password.present?
-admin_user.save! if admin_user.new_record? || admin_user.changed?
+admin.assign_attributes(first_name: "Kevin", last_name: "Hachem", platform_admin: true, status: :active)
+admin.password = admin_password if admin_password.present?
+admin.save! if admin.new_record? || admin.changed?

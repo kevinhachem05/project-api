@@ -16,24 +16,7 @@ To stop the services, run `docker compose down`. This keeps the named data volum
 
 ## Motor Admin
 
-The administrator dashboard is available at `http://localhost:3002/admin`. Sign in at `http://localhost:3002/admin_users/sign_in`. The dashboard requires an administrator account; public administrator registration is disabled.
-
-Set `ADMIN_USER_PASSWORD` in your untracked local `.env` file first. After adding the gems or pulling schema changes, rebuild the Rails services, apply migrations, and seed the admin account:
-
-```sh
-docker compose up --build -d web sidekiq
-docker compose exec web bin/rails db:migrate
-docker compose exec web bin/rails db:seed
-```
-
-If the web container is already running when you add or change `ADMIN_USER_PASSWORD`, recreate it so Compose passes the value to Rails:
-
-```sh
-docker compose up -d --force-recreate web
-docker compose exec web bin/rails db:seed
-```
-
-The seed creates `admin@example.com` with the configured password, first name `Kevin`, and last name `Hachem`. If the account already exists, it updates the name and updates the password when `ADMIN_USER_PASSWORD` is set. Keep the password in `.env`; never commit `.env` or a real credential.
+The platform administrator dashboard is available at `http://localhost:3002/admin`, with sign-in at `http://localhost:3002/users/sign_in`. Only active users marked as platform administrators can authenticate for the dashboard. Set `ADMIN_USER_PASSWORD` in your untracked `.env` file when creating or repairing the seeded administrator. Set `ADMIN_USER_EMAIL` if the administrator uses an address other than `admin@example.com`, then run `bin/rails db:seed`.
 
 Set `SIDEKIQ_CONCURRENCY` in your local `.env` to tune worker concurrency. Keep `.env` local and never commit its credentials or use them in production.
 
