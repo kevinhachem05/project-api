@@ -1,3 +1,4 @@
+
 # AGENTS.md — Ruby on Rails Backend Development Guidelines
 
 **## Commit Message Convention**
@@ -323,6 +324,7 @@ Use PostgreSQL and Active Record.
 Rules:
 
 - Use migrations for schema changes.
+- Use Rails' default auto-incrementing `id` primary key for every table; do not add custom ID generation or manually increment IDs in application code.
 - Add foreign keys for relationships where appropriate.
 - Add database indexes when necessary.
 - Use unique constraints for values requiring uniqueness.
@@ -611,3 +613,15 @@ Every implementation must be:
 - **Consistent:** Existing conventions and API contracts are respected.
 
 **The main objective is to build a professional Ruby on Rails backend with clean architecture, organized files, readable code, and a reliable API shared by the web and mobile applications.**
+
+# Generate a model with attributes
+rails g model Product name:string price:decimal
+
+# Generate a migration only
+rails g migration AddDescriptionToProducts description:text
+
+# Generate a controller and related files
+rails g controller Products
+
+# Generate a scaffold (almost everything CRUD-related)
+rails g scaffold Product name:string price:decimal
