@@ -21,6 +21,10 @@ gem "solid_queue"
 gem "solid_cable"
 gem "sidekiq", "~> 8.0"
 
+# Admin dashboard and dedicated administrator authentication.
+gem "motor-admin", "~> 0.5"
+gem "devise"
+
 # Reduces boot times through caching; required in config/boot.rb
 gem "bootsnap", require: false
 
