@@ -1,6 +1,6 @@
 # Project API
 
-Ruby on Rails API using Ruby 3.4.9, PostgreSQL, and Sidekiq for local background jobs.
+Ruby on Rails API using Ruby 3.4.13, PostgreSQL, and Sidekiq for local background jobs.
 
 ## Local development with Docker Compose
 
