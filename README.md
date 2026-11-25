@@ -10,7 +10,9 @@ Requirements: Docker Engine or Docker Desktop with the Compose plugin.
 docker compose up --build
 ```
 
-The Rails API is available at `http://localhost:3002`; PostgreSQL and Redis are reachable to other containers as `db:5432` and `redis:6381`. PostgreSQL is also published to the host on `127.0.0.1:5433` by default (change `POSTGRES_PORT` in `.env` if needed). Compose stores database and Redis data in named volumes.
+The Rails API is available at `http://localhost:3002`; PostgreSQL and Redis are reachable to other containers as `db:5432` and `redis:6381`. PostgreSQL is also published to the host on `127.0.0.1:5433` by default (change `POSTGRES_PORT` in `.env` if needed). Compose stores database and Redis data in named volumes. For a direct local Rails run, use `bin/rails server -p 3002`.
+
+Set `FRONTEND_ORIGINS` in `.env` to a comma-separated list of approved browser origins (default: `http://localhost:3001`). Set it to the deployed frontend origin when deploying. CORS allows the API's JSON methods and the `Authorization` and `X-CSRF-Token` headers; credentials are not enabled because API authentication uses bearer tokens.
 
 To stop the services, run `docker compose down`. This keeps the named data volumes. Do not use `docker compose down -v` unless you intend to permanently delete local database and Redis data.
 
@@ -20,7 +22,7 @@ The platform administrator dashboard is available at `http://localhost:3002/admi
 
 ## Account API
 
-Apipie documentation is available at `http://localhost:3002/apipie`. The versioned REST endpoints support passwordless email verification:
+Interactive Swagger UI is available at `http://localhost:3002/docs/`; the OpenAPI 3.0 document is at `http://localhost:3002/openapi.yaml`. Apipie documentation remains available at `http://localhost:3002/apipie`. These URLs are served from the same host after deployment, so the deployed API host is the public API URL to configure in the frontend. The versioned REST endpoints support passwordless email verification:
 
 - `POST /api/v1/users` creates an unverified account and issues a sign-up code.
 - `POST /api/v1/sessions` requests a sign-in code for an existing verified account.
