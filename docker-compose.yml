@@ -6,6 +6,7 @@ services:
     command: ["./bin/rails", "server", "-b", "0.0.0.0", "-p", "3002"]
     environment:
       RAILS_ENV: development
+      FRONTEND_ORIGINS: ${FRONTEND_ORIGINS:-http://localhost:3001}
       DB_HOST: db
       POSTGRES_USER: ${POSTGRES_USER:-project_api}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
