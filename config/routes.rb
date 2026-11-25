@@ -1,4 +1,15 @@
 Rails.application.routes.draw do
+  apipie
+
+  namespace :api do
+    namespace :v1 do
+      resources :users, only: :create
+      resource :me, only: :show, controller: :me
+      resources :sessions, only: %i[create show destroy]
+      resources :email_verifications, only: %i[create update]
+    end
+  end
+
   devise_for :users,
              skip: %i[registrations passwords],
              controllers: { sessions: "admin/sessions" }

@@ -75,6 +75,9 @@ GEM
       securerandom (>= 0.3)
       tzinfo (~> 2.0, >= 2.0.5)
       uri (>= 0.13.1)
+    apipie-rails (1.5.1)
+      actionpack (>= 5.0)
+      activesupport (>= 5.0)
     ar_lazy_preload (1.1.2)
       rails (>= 5.2)
     ast (2.4.3)
@@ -386,6 +389,7 @@ PLATFORMS
   x86_64-linux-musl
 
 DEPENDENCIES
+  apipie-rails (~> 1.5)
   bootsnap
   brakeman
   bundler-audit
@@ -418,6 +422,7 @@ CHECKSUMS
   activerecord (8.1.4.1) sha256=bd65599ca0b5d210937f835d42c7aff69d271741c75aab022730be6cbce67e87
   activestorage (8.1.4.1) sha256=0f4e2f114f3584723a80a2c089aacc6170e765a0b2c385c9782e26ed78f05c66
   activesupport (8.1.4.1) sha256=16ac4f341ca65c85a1fcdb8ac73f68891aae9e3c4a6f9c3a27daed8b00017ed7
+  apipie-rails (1.5.1) sha256=727c2a74d913cd0cb601d3675800672b7b5a6b0c61349805c0582431a12f2f45
   ar_lazy_preload (1.1.2) sha256=9a864086da4417bcf693194e43f008e0e861390e76978901c9606cd6e54bbf60
   ast (2.4.3) sha256=954615157c1d6a382bc27d690d973195e79db7f55e9765ac7c481c60bdb4d383
   audited (5.8.0) sha256=35cd63f9ee1eb2a1f773e7abf5915bb4e870b6338173e27c31e0e604e353f371

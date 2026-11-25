@@ -11,6 +11,13 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
       ADMIN_USER_EMAIL: ${ADMIN_USER_EMAIL:-admin@example.com}
       ADMIN_USER_PASSWORD: ${ADMIN_USER_PASSWORD:-}
+      MAILER_FROM: ${MAILER_FROM:-noreply@example.com}
+      SMTP_ADDRESS: ${SMTP_ADDRESS:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_DOMAIN: ${SMTP_DOMAIN:-localhost}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_AUTHENTICATION: ${SMTP_AUTHENTICATION:-plain}
       DATABASE_URL: postgresql://${POSTGRES_USER:-project_api}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/project_api_development
       REDIS_URL: redis://redis:6381/0
     ports:
@@ -64,6 +71,13 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-project_api}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/project_api_development
       REDIS_URL: redis://redis:6381/0
       SIDEKIQ_CONCURRENCY: ${SIDEKIQ_CONCURRENCY:-5}
+      MAILER_FROM: ${MAILER_FROM:-noreply@example.com}
+      SMTP_ADDRESS: ${SMTP_ADDRESS:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_DOMAIN: ${SMTP_DOMAIN:-localhost}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_AUTHENTICATION: ${SMTP_AUTHENTICATION:-plain}
     volumes:
       - .:/rails
     depends_on:
