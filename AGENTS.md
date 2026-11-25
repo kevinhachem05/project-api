@@ -405,16 +405,22 @@ Every meaningful feature should include appropriate tests.
 
 Use the existing test framework. For a new project, prefer RSpec if it is selected during setup.
 
-Organize tests under:
+This project uses Rails Minitest under `test/`. Keep each test file named after
+the class or resource it covers and mirror the application directory structure:
 
-`spec/`
+- Controller tests belong in `test/controllers/` and use the controller
+  filename, such as `test/controllers/api/v1/users_controller_test.rb`.
+- Model tests use the singular model name, such as `test/models/user_test.rb`.
+- Service tests mirror their service namespace and class name.
+- Give every controller its own test file; do not combine unrelated
+  controllers in generic files such as `api_v1_authentication_test.rb`.
 
 Rules:
 
-- Write request specs for API endpoints.
-- Write model specs for important validations and domain behavior.
-- Write service specs for complex business operations.
-- Write policy specs for authorization.
+- Write controller/integration tests for API endpoints.
+- Write model tests for important validations and domain behavior.
+- Write service tests for complex business operations.
+- Write policy tests for authorization.
 - Test successful and unsuccessful scenarios.
 - Test edge cases.
 - Keep tests readable and independent.

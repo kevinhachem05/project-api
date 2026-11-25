@@ -18,6 +18,19 @@ To stop the services, run `docker compose down`. This keeps the named data volum
 
 The platform administrator dashboard is available at `http://localhost:3002/admin`, with sign-in at `http://localhost:3002/users/sign_in`. Only active users marked as platform administrators can authenticate for the dashboard. Set `ADMIN_USER_PASSWORD` in your untracked `.env` file when creating or repairing the seeded administrator. Set `ADMIN_USER_EMAIL` if the administrator uses an address other than `admin@example.com`, then run `bin/rails db:seed`.
 
+## Account API
+
+Apipie documentation is available at `http://localhost:3002/apipie`. The versioned REST endpoints support passwordless email verification:
+
+- `POST /api/v1/users` creates an unverified account and issues a sign-up code.
+- `POST /api/v1/sessions` requests a sign-in code for an existing verified account.
+- `POST /api/v1/email_verifications` resends a code for `sign_up` or `sign_in`.
+- `PATCH /api/v1/email_verifications/:id` verifies the six-digit code and creates a session.
+- `GET /api/v1/me` returns the authenticated user's profile using the session bearer token.
+- `GET /api/v1/sessions/:id` returns the current session; `DELETE` revokes it.
+
+In development and test, verification codes are fixed to `000000` and email delivery is skipped. Other environments generate random codes and deliver them by email. Configure `MAILER_FROM`, `SMTP_ADDRESS`, `SMTP_PORT`, `SMTP_DOMAIN`, `SMTP_USERNAME`, and `SMTP_PASSWORD` for both the web and Sidekiq services when enabling email delivery. Session tokens are returned once and stored as digests. Browser sessions also return a CSRF token required in the `X-CSRF-Token` header for state-changing authenticated requests. Sessions expire after 30 minutes of inactivity and no later than 30 days after creation.
+
 Set `SIDEKIQ_CONCURRENCY` in your local `.env` to tune worker concurrency. Keep `.env` local and never commit its credentials or use them in production.
 
 ## Tests and lint
