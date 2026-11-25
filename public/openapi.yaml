@@ -1,0 +1,362 @@
+openapi: 3.0.3
+info:
+  title: Project API
+  version: 1.0.0
+  description: >-
+    Versioned JSON API for account registration, passwordless sign-in,
+    email verification, and session management. See the authentication
+    descriptions for bearer token and browser CSRF requirements.
+servers:
+  - url: /api/v1
+    description: Same host as this OpenAPI document (local default http://localhost:3002)
+tags:
+  - name: Sign up
+  - name: Sign in
+  - name: Verification codes
+  - name: Account
+  - name: Sessions
+paths:
+  /users:
+    post:
+      tags: [Sign up]
+      summary: Register an account and send a sign-up verification code
+      operationId: registerUser
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user]
+              properties:
+                user:
+                  type: object
+                  required: [email, first_name, last_name]
+                  properties:
+                    email: { type: string, format: email, example: user@example.com }
+                    first_name: { type: string, example: Alex }
+                    last_name: { type: string, example: Morgan }
+                client_type:
+                  type: string
+                  enum: [browser, mobile]
+                  default: browser
+      responses:
+        '201':
+          description: Account created and verification issued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      user: { $ref: '#/components/schemas/User' }
+                      email_verification: { $ref: '#/components/schemas/VerificationReference' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '503': { $ref: '#/components/responses/DeliveryError' }
+  /sessions:
+    post:
+      tags: [Sign in]
+      summary: Request a sign-in verification code
+      operationId: requestSignIn
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [session]
+              properties:
+                session:
+                  type: object
+                  required: [email, client_type]
+                  properties:
+                    email: { type: string, format: email }
+                    client_type: { type: string, enum: [browser, mobile] }
+      responses:
+        '202':
+          description: Generic response avoids revealing whether an account exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      verification_id: { type: string, format: uuid }
+                      expires_at: { type: string, format: date-time }
+                      message: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '503': { $ref: '#/components/responses/DeliveryError' }
+  /sessions/{id}:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+    get:
+      tags: [Sessions]
+      summary: Read the current session
+      operationId: getSession
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current session details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Session' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Sessions]
+      summary: Revoke the current session
+      description: Browser sessions must also send X-CSRF-Token. Mobile sessions do not use this CSRF check.
+      operationId: revokeSession
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CsrfToken'
+      responses:
+        '204': { description: Session revoked }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /email_verifications:
+    post:
+      tags: [Verification codes]
+      summary: Send or resend an email verification code
+      operationId: createEmailVerification
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, purpose]
+              properties:
+                email: { type: string, format: email }
+                purpose: { type: string, enum: [sign_up, sign_in] }
+                client_type:
+                  type: string
+                  enum: [browser, mobile]
+                  default: browser
+      responses:
+        '202':
+          description: Generic response to avoid revealing account eligibility
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      verification_id: { type: string, format: uuid }
+                      expires_at: { type: string, format: date-time }
+                      message: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '503': { $ref: '#/components/responses/DeliveryError' }
+  /email_verifications/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Opaque verification ID returned when requesting the code
+        schema: { type: string, format: uuid }
+    patch:
+      tags: [Verification codes]
+      summary: Confirm a six-digit code and create a session
+      operationId: verifyEmailCode
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email_verification]
+              properties:
+                email_verification:
+                  type: object
+                  required: [code]
+                  properties:
+                    code: { type: string, pattern: '^\d{6}$', example: '123456' }
+      responses:
+        '201':
+          description: Code accepted; token is returned once
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      user: { $ref: '#/components/schemas/User' }
+                      session: { $ref: '#/components/schemas/CreatedSession' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    put:
+      tags: [Verification codes]
+      summary: Confirm a six-digit code and create a session (PUT alias)
+      operationId: verifyEmailCodePut
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email_verification]
+              properties:
+                email_verification:
+                  type: object
+                  required: [code]
+                  properties:
+                    code: { type: string, pattern: '^\d{6}$', example: '123456' }
+      responses:
+        '201':
+          description: Code accepted; token is returned once
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      user: { $ref: '#/components/schemas/User' }
+                      session: { $ref: '#/components/schemas/CreatedSession' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /me:
+    get:
+      tags: [Account]
+      summary: Get the authenticated user's profile
+      operationId: getCurrentUser
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Authenticated user profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      user: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /up:
+    servers:
+      - url: /
+        description: Application host root
+    get:
+      tags: [Health]
+      summary: Check whether the Rails application is healthy
+      operationId: healthCheck
+      security: []
+      responses:
+        '200': { description: Application is healthy }
+        '500': { description: Application health check failed }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque session token
+      description: Token returned by successful email verification.
+  parameters:
+    SessionId:
+      name: id
+      in: path
+      required: true
+      description: Numeric ID of the session belonging to the authenticated user
+      schema: { type: string }
+    CsrfToken:
+      name: X-CSRF-Token
+      in: header
+      required: false
+      description: Required for state-changing requests made with a browser session; returned at verification.
+      schema: { type: string }
+  schemas:
+    User:
+      type: object
+      properties:
+        id: { type: integer }
+        email: { type: string, format: email }
+        first_name: { type: string }
+        last_name: { type: string }
+        email_verified_at: { type: string, format: date-time, nullable: true }
+        status: { type: string, enum: [active, suspended, deactivated] }
+    VerificationReference:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        expires_at: { type: string, format: date-time }
+    Session:
+      type: object
+      properties:
+        id: { type: integer }
+        client_type: { type: string, enum: [browser, mobile] }
+        expires_at: { type: string, format: date-time }
+        absolute_expires_at: { type: string, format: date-time }
+        last_active_at: { type: string, format: date-time }
+    CreatedSession:
+      allOf:
+        - $ref: '#/components/schemas/Session'
+        - type: object
+          properties:
+            token: { type: string, description: Store securely; sent as Authorization Bearer token }
+            csrf_token: { type: string, description: Required on state-changing browser-session requests }
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details: { type: object, nullable: true }
+  responses:
+    ValidationError:
+      description: Invalid parameters, verification code, or expired verification
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    BadRequest:
+      description: Required request parameter is missing
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    DeliveryError:
+      description: Email delivery failed
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Unauthorized:
+      description: Missing, invalid, expired, or revoked bearer session
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Forbidden:
+      description: Browser session request has a missing or invalid CSRF token
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: Session does not belong to the authenticated user
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
