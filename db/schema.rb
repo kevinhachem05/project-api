@@ -10,18 +10,27 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_22_103409) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_22_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
-  create_table "admin_users", force: :cascade do |t|
-    t.string "email", default: "", null: false
-    t.string "encrypted_password", default: "", null: false
-    t.string "first_name", default: "", null: false
-    t.string "last_name", default: "", null: false
+  create_table "email_verifications", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.uuid "public_id", null: false
+    t.string "purpose", null: false
+    t.string "client_type", null: false
+    t.string "code_digest", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "consumed_at"
+    t.integer "attempts_count", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["email"], name: "index_admin_users_on_email", unique: true
+    t.index ["public_id"], name: "index_email_verifications_on_public_id", unique: true
+    t.index ["user_id", "purpose", "created_at"], name: "index_email_verifications_for_resend"
+    t.index ["user_id"], name: "index_email_verifications_on_user_id"
+    t.check_constraint "attempts_count >= 0", name: "email_verifications_attempts_count_check"
+    t.check_constraint "client_type::text = ANY (ARRAY['mobile'::character varying, 'browser'::character varying]::text[])", name: "email_verifications_client_type_check"
+    t.check_constraint "purpose::text = ANY (ARRAY['sign_up'::character varying, 'sign_in'::character varying]::text[])", name: "email_verifications_purpose_check"
   end
 
   create_table "motor_alert_locks", force: :cascade do |t|
@@ -217,9 +226,42 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_103409) do
     t.index ["name"], name: "motor_tags_name_unique_index", unique: true
   end
 
+  create_table "sessions", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "token_digest", null: false
+    t.string "csrf_token", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "absolute_expires_at", null: false
+    t.datetime "last_active_at"
+    t.datetime "revoked_at"
+    t.string "ip_address"
+    t.string "client_type", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["token_digest"], name: "index_sessions_on_token_digest", unique: true
+    t.index ["user_id"], name: "index_sessions_on_user_id"
+    t.check_constraint "client_type::text = ANY (ARRAY['mobile'::character varying, 'browser'::character varying]::text[])", name: "sessions_client_type_check"
+  end
+
+  create_table "users", force: :cascade do |t|
+    t.string "email", null: false
+    t.datetime "email_verified_at"
+    t.string "first_name", null: false
+    t.string "last_name", null: false
+    t.boolean "platform_admin", default: false, null: false
+    t.string "status", default: "active", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "encrypted_password", default: "", null: false
+    t.index ["email"], name: "index_users_on_email", unique: true
+    t.check_constraint "status::text = ANY (ARRAY['active'::character varying, 'suspended'::character varying, 'deactivated'::character varying]::text[])", name: "users_status_check"
+  end
+
+  add_foreign_key "email_verifications", "users"
   add_foreign_key "motor_alert_locks", "motor_alerts", column: "alert_id"
   add_foreign_key "motor_alerts", "motor_queries", column: "query_id"
   add_foreign_key "motor_note_tag_tags", "motor_note_tags", column: "tag_id"
   add_foreign_key "motor_note_tag_tags", "motor_notes", column: "note_id"
   add_foreign_key "motor_taggable_tags", "motor_tags", column: "tag_id"
+  add_foreign_key "sessions", "users"
 end

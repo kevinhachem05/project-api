@@ -21,9 +21,10 @@ gem "solid_queue"
 gem "solid_cable"
 gem "sidekiq", "~> 8.0"
 
-# Admin dashboard and dedicated administrator authentication.
+# Motor Admin uses Devise authentication for platform administrators.
 gem "motor-admin", "~> 0.5"
 gem "devise"
+gem "apipie-rails", "~> 1.5"
 
 # Reduces boot times through caching; required in config/boot.rb
 gem "bootsnap", require: false

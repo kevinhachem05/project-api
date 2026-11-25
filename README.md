@@ -1,6 +1,6 @@
 # Project API
 
-Ruby on Rails API using Ruby 3.4.9, PostgreSQL, and Sidekiq for local background jobs.
+Ruby on Rails API using Ruby 3.4.13, PostgreSQL, and Sidekiq for local background jobs.
 
 ## Local development with Docker Compose
 
@@ -16,24 +16,20 @@ To stop the services, run `docker compose down`. This keeps the named data volum
 
 ## Motor Admin
 
-The administrator dashboard is available at `http://localhost:3002/admin`. Sign in at `http://localhost:3002/admin_users/sign_in`. The dashboard requires an administrator account; public administrator registration is disabled.
+The platform administrator dashboard is available at `http://localhost:3002/admin`, with sign-in at `http://localhost:3002/users/sign_in`. Only active users marked as platform administrators can authenticate for the dashboard. Set `ADMIN_USER_PASSWORD` in your untracked `.env` file when creating or repairing the seeded administrator. Set `ADMIN_USER_EMAIL` if the administrator uses an address other than `admin@example.com`, then run `bin/rails db:seed`.
 
-Set `ADMIN_USER_PASSWORD` in your untracked local `.env` file first. After adding the gems or pulling schema changes, rebuild the Rails services, apply migrations, and seed the admin account:
+## Account API
 
-```sh
-docker compose up --build -d web sidekiq
-docker compose exec web bin/rails db:migrate
-docker compose exec web bin/rails db:seed
-```
+Apipie documentation is available at `http://localhost:3002/apipie`. The versioned REST endpoints support passwordless email verification:
 
-If the web container is already running when you add or change `ADMIN_USER_PASSWORD`, recreate it so Compose passes the value to Rails:
+- `POST /api/v1/users` creates an unverified account and issues a sign-up code.
+- `POST /api/v1/sessions` requests a sign-in code for an existing verified account.
+- `POST /api/v1/email_verifications` resends a code for `sign_up` or `sign_in`.
+- `PATCH /api/v1/email_verifications/:id` verifies the six-digit code and creates a session.
+- `GET /api/v1/me` returns the authenticated user's profile using the session bearer token.
+- `GET /api/v1/sessions/:id` returns the current session; `DELETE` revokes it.
 
-```sh
-docker compose up -d --force-recreate web
-docker compose exec web bin/rails db:seed
-```
-
-The seed creates `admin@example.com` with the configured password, first name `Kevin`, and last name `Hachem`. If the account already exists, it updates the name and updates the password when `ADMIN_USER_PASSWORD` is set. Keep the password in `.env`; never commit `.env` or a real credential.
+In development and test, verification codes are fixed to `000000` and email delivery is skipped. Other environments generate random codes and deliver them by email. Configure `MAILER_FROM`, `SMTP_ADDRESS`, `SMTP_PORT`, `SMTP_DOMAIN`, `SMTP_USERNAME`, and `SMTP_PASSWORD` for both the web and Sidekiq services when enabling email delivery. Session tokens are returned once and stored as digests. Browser sessions also return a CSRF token required in the `X-CSRF-Token` header for state-changing authenticated requests. Sessions expire after 30 minutes of inactivity and no later than 30 days after creation.
 
 Set `SIDEKIQ_CONCURRENCY` in your local `.env` to tune worker concurrency. Keep `.env` local and never commit its credentials or use them in production.
 
