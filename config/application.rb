@@ -34,6 +34,5 @@ module ProjectApi
     config.middleware.use ActionDispatch::Session::CookieStore,
                           key: "_project_api_session"
     config.middleware.use ActionDispatch::Flash
-
   end
 end
